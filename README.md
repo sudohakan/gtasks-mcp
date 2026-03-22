@@ -1,11 +1,24 @@
+<div align="center">
+
 # 📋 Google Tasks MCP Server
 
-[![Version](https://img.shields.io/badge/version-0.0.1-blue?style=flat-square)](CHANGELOG.md)
-[![Language](https://img.shields.io/badge/node.js-18%2B-brightgreen?style=flat-square)](https://nodejs.org)
-[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
-[![smithery badge](https://smithery.ai/badge/@zcaceres/gtasks)](https://smithery.ai/server/@zcaceres/gtasks)
+**Manage Google Tasks directly from Claude and other MCP clients.**
 
-Seamless MCP integration for Google Tasks — manage your task lists, create, search, update, and delete tasks directly from Claude or other MCP clients.
+[![Version](https://img.shields.io/badge/version-1.0.0-blue?style=flat-square)](CHANGELOG.md)
+[![Node.js](https://img.shields.io/badge/node.js-18%2B-brightgreen?style=flat-square)](https://nodejs.org)
+[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/sudohakan/gtasks-mcp/ci.yml?style=flat-square&label=CI)](https://github.com/sudohakan/gtasks-mcp/actions)
+[![Stars](https://img.shields.io/github/stars/sudohakan/gtasks-mcp?style=flat-square)](https://github.com/sudohakan/gtasks-mcp/stargazers)
+
+[Quick Start](#-quick-start) · [Features](#-features) · [Tools](#-available-tools) · [Configuration](#-configuration) · [Contributing](#-contributing)
+
+</div>
+
+---
+
+## What is this?
+
+Seamless MCP integration for Google Tasks — create, search, update, and delete tasks directly from Claude or other MCP clients. OAuth 2.0 authenticated, with full CRUD operations and resource URI support.
 
 ## ✨ Features
 
