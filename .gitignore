@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env
+*.log
+.gtasks-server-credentials.json
+gcp-oauth.keys.json
+*.local
