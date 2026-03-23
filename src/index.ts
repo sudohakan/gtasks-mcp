@@ -336,19 +336,19 @@ const credentialsPath = path.join(
 );
 
 async function authenticateAndSaveCredentials() {
-  console.log("Launching auth flow…");
+  console.error("Launching auth flow…");
   const p = path.join(
     path.dirname(new URL(import.meta.url).pathname),
     "../gcp-oauth.keys.json",
   );
 
-  console.log(p);
+  console.error(p);
   const auth = await authenticate({
     keyfilePath: p,
     scopes: ["https://www.googleapis.com/auth/tasks"],
   });
   fs.writeFileSync(credentialsPath, JSON.stringify(auth.credentials));
-  console.log("Credentials saved. You can now run the server.");
+  console.error("Credentials saved. You can now run the server.");
 }
 
 async function loadCredentialsAndRunServer() {
@@ -377,7 +377,7 @@ async function loadCredentialsAndRunServer() {
   auth.setCredentials(credentials);
 
   // Auto-refresh: save new tokens when refreshed
-  auth.on("tokens", (tokens: any) => {
+  auth.on("tokens", (tokens: { access_token?: string; refresh_token?: string; expiry_date?: number }) => {
     const existing = JSON.parse(fs.readFileSync(credentialsPath, "utf-8"));
     const updated = { ...existing, ...tokens };
     fs.writeFileSync(credentialsPath, JSON.stringify(updated));
