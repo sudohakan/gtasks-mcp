@@ -50,7 +50,7 @@ export class TaskResources {
           task = taskResponse.data;
           break;
         } catch (error) {
-          // Task not found in this list, continue to the next one
+          console.error('Task lookup failed:', error instanceof Error ? error.message : String(error));
         }
       }
     }
