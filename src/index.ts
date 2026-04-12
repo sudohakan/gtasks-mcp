@@ -13,6 +13,8 @@ import {
 import fs from "fs";
 import { google, tasks_v1 } from "googleapis";
 import path from "path";
+import { fileURLToPath } from "url";
+import { ensureConfigDir, getConfigPaths, migrateLegacySecrets } from "./config.js";
 import { TaskActions, TaskResources } from "./Tasks.js";
 
 const tasks = google.tasks("v1");
@@ -217,6 +219,56 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
+        name: "batch-create",
+        description: "Create multiple tasks in Google Tasks in a single call (parallel)",
+        inputSchema: {
+          type: "object",
+          properties: {
+            items: {
+              type: "array",
+              description: "Array of tasks to create",
+              items: {
+                type: "object",
+                properties: {
+                  taskListId: { type: "string", description: "Task list ID (defaults to @default)" },
+                  title: { type: "string", description: "Task title" },
+                  notes: { type: "string", description: "Task notes" },
+                  due: { type: "string", description: "Due date (YYYY-MM-DD)" },
+                },
+                required: ["title"],
+              },
+            },
+          },
+          required: ["items"],
+        },
+      },
+      {
+        name: "batch-update",
+        description: "Update multiple tasks in Google Tasks in a single call (parallel)",
+        inputSchema: {
+          type: "object",
+          properties: {
+            items: {
+              type: "array",
+              description: "Array of tasks to update",
+              items: {
+                type: "object",
+                properties: {
+                  taskListId: { type: "string", description: "Task list ID (defaults to @default)" },
+                  id: { type: "string", description: "Task ID" },
+                  title: { type: "string", description: "New title" },
+                  notes: { type: "string", description: "New notes" },
+                  status: { type: "string", enum: ["needsAction", "completed"], description: "New status" },
+                  due: { type: "string", description: "New due date (YYYY-MM-DD)" },
+                },
+                required: ["id"],
+              },
+            },
+          },
+          required: ["items"],
+        },
+      },
+      {
         name: "update",
         description: "Update a task in Google Tasks",
         inputSchema: {
@@ -290,6 +342,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const taskResult = await TaskActions.create(request, tasks);
     return taskResult;
   }
+  if (request.params.name === "batch-create") {
+    const taskResult = await TaskActions.batchCreate(request, tasks);
+    return taskResult;
+  }
+  if (request.params.name === "batch-update") {
+    const taskResult = await TaskActions.batchUpdate(request, tasks);
+    return taskResult;
+  }
   if (request.params.name === "update") {
     const taskResult = await TaskActions.update(request, tasks);
     return taskResult;
@@ -330,43 +390,58 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   throw new Error("Tool not found");
 });
 
-const credentialsPath = path.join(
-  path.dirname(new URL(import.meta.url).pathname),
-  "../.gtasks-server-credentials.json",
-);
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const configPaths = getConfigPaths({ repoRoot });
+
+function relocateLegacySecrets() {
+  const moved = migrateLegacySecrets(configPaths);
+  if (moved.length > 0) {
+    console.error(
+      `Moved legacy secret file(s) out of the repository and into ${configPaths.configDir}: ${moved.join(", ")}`
+    );
+  }
+}
 
 async function authenticateAndSaveCredentials() {
+  relocateLegacySecrets();
+  ensureConfigDir(configPaths.configDir);
   console.error("Launching auth flow…");
-  const p = path.join(
-    path.dirname(new URL(import.meta.url).pathname),
-    "../gcp-oauth.keys.json",
-  );
+  if (!fs.existsSync(configPaths.oauthKeysPath)) {
+    throw new Error(
+      `OAuth keys not found at ${configPaths.oauthKeysPath}. Place your Google OAuth desktop-app JSON there, or set GTASKS_MCP_OAUTH_KEYS_PATH.`
+    );
+  }
 
-  console.error(p);
   const auth = await authenticate({
-    keyfilePath: p,
+    keyfilePath: configPaths.oauthKeysPath,
     scopes: ["https://www.googleapis.com/auth/tasks"],
   });
-  fs.writeFileSync(credentialsPath, JSON.stringify(auth.credentials));
-  console.error("Credentials saved. You can now run the server.");
+  fs.writeFileSync(configPaths.credentialsPath, JSON.stringify(auth.credentials));
+  console.error(`Credentials saved to ${configPaths.credentialsPath}. You can now run the server.`);
 }
 
 async function loadCredentialsAndRunServer() {
-  if (!fs.existsSync(credentialsPath)) {
+  relocateLegacySecrets();
+  ensureConfigDir(configPaths.configDir);
+
+  if (!fs.existsSync(configPaths.credentialsPath)) {
     console.error(
-      "Credentials not found. Please run with 'auth' argument first.",
+      `Credentials not found at ${configPaths.credentialsPath}. Run with 'auth' first, or set GTASKS_MCP_CREDENTIALS_PATH.`,
     );
     process.exit(1);
   }
 
-  const credentials = JSON.parse(fs.readFileSync(credentialsPath, "utf-8"));
+  if (!fs.existsSync(configPaths.oauthKeysPath)) {
+    console.error(
+      `OAuth keys not found at ${configPaths.oauthKeysPath}. Place your Google OAuth desktop-app JSON there, or set GTASKS_MCP_OAUTH_KEYS_PATH.`,
+    );
+    process.exit(1);
+  }
+
+  const credentials = JSON.parse(fs.readFileSync(configPaths.credentialsPath, "utf-8"));
 
   // Load OAuth keys to get client_id and client_secret for token refresh
-  const oauthKeysPath = path.join(
-    path.dirname(new URL(import.meta.url).pathname),
-    "../gcp-oauth.keys.json",
-  );
-  const oauthKeys = JSON.parse(fs.readFileSync(oauthKeysPath, "utf-8"));
+  const oauthKeys = JSON.parse(fs.readFileSync(configPaths.oauthKeysPath, "utf-8"));
   const key = oauthKeys.installed || oauthKeys.web;
 
   const auth = new google.auth.OAuth2(
@@ -377,10 +452,10 @@ async function loadCredentialsAndRunServer() {
   auth.setCredentials(credentials);
 
   // Auto-refresh: save new tokens when refreshed
-  auth.on("tokens", (tokens: { access_token?: string; refresh_token?: string; expiry_date?: number }) => {
-    const existing = JSON.parse(fs.readFileSync(credentialsPath, "utf-8"));
+  auth.on("tokens", (tokens) => {
+    const existing = JSON.parse(fs.readFileSync(configPaths.credentialsPath, "utf-8"));
     const updated = { ...existing, ...tokens };
-    fs.writeFileSync(credentialsPath, JSON.stringify(updated));
+    fs.writeFileSync(configPaths.credentialsPath, JSON.stringify(updated));
   });
 
   google.options({ auth });

@@ -23,15 +23,10 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Type check
-        run: bunx tsc --noEmit 2>/dev/null || echo "No tsconfig found — skipping type check"
+        run: bunx tsc --noEmit
 
       - name: Build
         run: bun run build
 
       - name: Test
-        run: |
-          if bun run test --dry-run 2>/dev/null | grep -q "no tests"; then
-            echo "No tests found — skipping"
-          else
-            bun test || echo "Tests completed"
-          fi
+        run: bun test

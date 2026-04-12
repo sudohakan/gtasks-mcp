@@ -19,7 +19,7 @@ We take security seriously and will acknowledge your report and work toward a fi
 
 This server uses Google's OAuth 2.0 protocol for authentication:
 
-- **Local Credential Storage**: Credentials are stored locally in `.gtasks-server-credentials.json` (not committed to version control)
+- **Local Credential Storage**: Credentials are stored locally outside the repository in the user's config directory (or in paths provided through environment overrides)
 - **No Embedded Secrets**: OAuth keys are provided by the user at setup time
 - **Secure Scopes**: Requests only the `https://www.googleapis.com/auth/tasks` scope
 - **Token Refresh**: Automatic token refresh managed by the Google Cloud library
@@ -27,7 +27,7 @@ This server uses Google's OAuth 2.0 protocol for authentication:
 ### Sensitive Data Handling
 
 - **API Keys/Credentials**: Never hardcode secrets. Store in environment variables or config files outside the repository
-- **Credentials File**: Add to `.gitignore` — `.gtasks-server-credentials.json` is not tracked
+- **Credentials File**: Keep OAuth key and token files outside the repository. Use `GTASKS_MCP_CONFIG_DIR`, `GTASKS_MCP_OAUTH_KEYS_PATH`, or `GTASKS_MCP_CREDENTIALS_PATH` if you need custom locations
 - **Log Output**: Do not log authentication tokens or sensitive task data in production
 
 ### Access Control
@@ -39,7 +39,7 @@ This server uses Google's OAuth 2.0 protocol for authentication:
 
 ## Best Practices for Users
 
-1. **Keep credentials private**: Do not share `.gtasks-server-credentials.json` or `gcp-oauth.keys.json`
+1. **Keep credentials private**: Do not share your local OAuth key or token files
 2. **Revoke access if needed**: Visit [Google Account](https://myaccount.google.com/permissions) to revoke app access
 3. **Use environment variables**: For deployment, use environment-based configuration instead of files
 4. **Rotate credentials**: Periodically regenerate OAuth keys in Google Cloud Console

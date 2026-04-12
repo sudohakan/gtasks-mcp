@@ -37,7 +37,7 @@ Seamless MCP integration for Google Tasks — create, search, update, and delete
 
 1. **Create a Google Cloud project** and enable the Google Tasks API
 2. **Set up OAuth credentials** (Desktop App type)
-3. **Place credentials** in `gcp-oauth.keys.json`
+3. **Place credentials** in your local config dir (`%APPDATA%\\gtasks-mcp\\gcp-oauth.keys.json` on Windows, `~/.config/gtasks-mcp/gcp-oauth.keys.json` on Linux/macOS)
 4. **Run authentication**: `npm run start auth`
 5. **Build and configure**: `npm run build`, then add to your MCP config
 
@@ -52,7 +52,7 @@ Seamless MCP integration for Google Tasks — create, search, update, and delete
 4. Add scopes: `https://www.googleapis.com/auth/tasks`
 5. [Create an OAuth Client ID](https://console.cloud.google.com/apis/credentials/oauthclient) for application type "Desktop App"
 6. Download the JSON file of your OAuth keys
-7. Rename to `gcp-oauth.keys.json` and place in the project root
+7. Rename to `gcp-oauth.keys.json` and place it in your local `gtasks-mcp` config directory
 
 </details>
 
@@ -61,7 +61,7 @@ Seamless MCP integration for Google Tasks — create, search, update, and delete
 ### Via Smithery (Recommended)
 
 ```bash
-npx -y @smithery/cli install @zcaceres/gtasks --client claude
+npx -y @smithery/cli install @sudohakan/gtasks-mcp --client claude
 ```
 
 ### Manual Setup
@@ -99,9 +99,18 @@ npm run start auth
 This will:
 1. Open your default browser to Google's OAuth login
 2. Request permission to access Google Tasks
-3. Save credentials to `.gtasks-server-credentials.json`
+3. Save credentials to your local config directory, outside the repository
 
 Subsequent server runs will use the saved credentials.
+
+### Credential storage
+
+- Windows default: `%APPDATA%\\gtasks-mcp\\`
+- Linux/macOS default: `~/.config/gtasks-mcp/`
+- Override the directory with `GTASKS_MCP_CONFIG_DIR`
+- Override individual files with `GTASKS_MCP_OAUTH_KEYS_PATH` and `GTASKS_MCP_CREDENTIALS_PATH`
+
+If legacy secret files are still present in the repository root, the server will automatically move them into the external config directory on first run.
 
 ## 🛠️ Development
 
@@ -113,70 +122,29 @@ Subsequent server runs will use the saved credentials.
 | `npm run start auth` | Run authentication flow |
 | `npm test` | Run test suite |
 
-## 📚 Available Tools
+## 📚 Available Tools (12)
 
-### search
-Search for tasks using a query string.
+### Task Tools
 
-**Input:**
-- `query` (string, required): Search terms
+| Tool | Description | Required Params |
+|------|-------------|-----------------|
+| `search` | Search for tasks using a query string | `query` |
+| `list` | List all tasks across all task lists | -- |
+| `create` | Create a new task | `title` |
+| `update` | Update an existing task | `id`, `uri` |
+| `delete` | Delete a task | `id`, `taskListId` |
+| `clear` | Clear completed tasks from a task list | `taskListId` |
+| `batch-create` | Create multiple tasks in parallel | `items[]` (each: `title`) |
+| `batch-update` | Update multiple tasks in parallel | `items[]` (each: `id`) |
 
-**Output:** Matching tasks with full details
+### Task List Tools
 
-### list
-List all tasks across all task lists.
-
-**Input:**
-- `cursor` (string, optional): Pagination cursor
-
-**Output:** Array of tasks with metadata
-
-### list-tasklists
-List all task lists in your Google Tasks account.
-
-**Output:** Array of task list IDs and names
-
-### create
-Create a new task.
-
-**Input:**
-- `taskListId` (string, optional): Target task list (uses default if omitted)
-- `title` (string, required): Task title
-- `notes` (string, optional): Task description
-- `due` (string, optional): Due date (ISO 8601 format)
-
-**Output:** Created task with ID and metadata
-
-### update
-Update an existing task.
-
-**Input:**
-- `taskListId` (string, optional): Task list containing the task
-- `id` (string, required): Task ID to update
-- `uri` (string, required): Task URI
-- `title` (string, optional): New title
-- `notes` (string, optional): New notes
-- `status` (string, optional): New status (`needsAction` or `completed`)
-- `due` (string, optional): New due date
-
-**Output:** Updated task details
-
-### delete
-Delete a task.
-
-**Input:**
-- `taskListId` (string, required): Task list containing the task
-- `id` (string, required): Task ID to delete
-
-**Output:** Confirmation of deletion
-
-### clear
-Clear all completed tasks from a task list.
-
-**Input:**
-- `taskListId` (string, required): Target task list
-
-**Output:** Confirmation of cleared tasks
+| Tool | Description | Required Params |
+|------|-------------|-----------------|
+| `list-tasklists` | List all task lists | -- |
+| `create-tasklist` | Create a new task list | `title` |
+| `delete-tasklist` | Delete a task list | `taskListId` |
+| `rename-tasklist` | Rename a task list | `taskListId`, `title` |
 
 ## 🏗️ Architecture
 
@@ -192,7 +160,9 @@ This MCP server implements the Model Context Protocol to expose Google Tasks as 
 ```
 gtasks-mcp/
 ├── src/
-│   └── index.ts           # Main server implementation
+│   ├── index.ts           # Main server implementation
+│   ├── config.ts          # Configuration and credential paths
+│   └── Tasks.ts           # Task action helpers (batch ops)
 ├── dist/                  # Compiled output
 ├── package.json           # Dependencies and scripts
 ├── tsconfig.json          # TypeScript configuration

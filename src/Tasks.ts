@@ -236,7 +236,7 @@ export class TaskActions {
     const taskId = request.params.arguments?.id as string;
 
     if (!taskId) {
-      throw new Error("Task URI is required");
+      throw new Error("Task ID is required");
     }
 
     await tasks.tasks.delete({
@@ -271,7 +271,98 @@ export class TaskActions {
       content: [
         {
           type: "text",
-          text: `Found ${allTasks.length} tasks:\n${taskList}`,
+          text: `Found ${filteredItems.length} tasks:\n${taskList}`,
+        },
+      ],
+      isError: false,
+    };
+  }
+
+  static async batchCreate(request: CallToolRequest, tasks: tasks_v1.Tasks) {
+    const items = request.params.arguments?.items as Array<{
+      taskListId?: string;
+      title: string;
+      notes?: string;
+      due?: string;
+    }>;
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      throw new Error("items array is required and must not be empty");
+    }
+
+    const results = await Promise.all(
+      items.map(async (item, index) => {
+        try {
+          const taskListId = item.taskListId || "@default";
+          const requestBody: Record<string, string> = { title: item.title };
+          if (item.notes) requestBody.notes = item.notes;
+          if (item.due) requestBody.due = normalizeDueDate(item.due)!;
+
+          const response = await tasks.tasks.insert({
+            tasklist: taskListId,
+            requestBody,
+          });
+          return { index, success: true, id: response.data.id, title: response.data.title };
+        } catch (error) {
+          return { index, success: false, title: item.title, error: error instanceof Error ? error.message : String(error) };
+        }
+      })
+    );
+
+    const successCount = results.filter((r) => r.success).length;
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify({ total: items.length, success: successCount, results }, null, 2),
+        },
+      ],
+      isError: false,
+    };
+  }
+
+  static async batchUpdate(request: CallToolRequest, tasks: tasks_v1.Tasks) {
+    const items = request.params.arguments?.items as Array<{
+      taskListId?: string;
+      id: string;
+      title?: string;
+      notes?: string;
+      status?: string;
+      due?: string;
+    }>;
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      throw new Error("items array is required and must not be empty");
+    }
+
+    const results = await Promise.all(
+      items.map(async (item, index) => {
+        try {
+          const taskListId = item.taskListId || "@default";
+          const requestBody: Record<string, string> = { id: item.id };
+          if (item.title) requestBody.title = item.title;
+          if (item.notes) requestBody.notes = item.notes;
+          if (item.status) requestBody.status = item.status;
+          if (item.due) requestBody.due = normalizeDueDate(item.due)!;
+
+          const response = await tasks.tasks.patch({
+            tasklist: taskListId,
+            task: item.id,
+            requestBody,
+          });
+          return { index, success: true, id: response.data.id, title: response.data.title };
+        } catch (error) {
+          return { index, success: false, id: item.id, error: error instanceof Error ? error.message : String(error) };
+        }
+      })
+    );
+
+    const successCount = results.filter((r) => r.success).length;
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify({ total: items.length, success: successCount, results }, null, 2),
         },
       ],
       isError: false,

@@ -8,14 +8,14 @@ WORKDIR /app
 # Copy package.json and package-lock.json
 COPY package.json package-lock.json ./
 
-# Install dependencies
-RUN npm install --ignore-scripts
+# Install dependencies and bun (required by build script)
+RUN npm install --ignore-scripts && npm install -g bun
 
 # Copy the rest of the application code
 COPY . .
 
 # Build the application
-RUN npm run build
+RUN bun build ./src/index.ts --outdir ./dist --target bun
 
 # Stage 2: Create the final image for running the app
 FROM node:18-alpine

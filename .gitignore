@@ -5,3 +5,4 @@ dist/
 .gtasks-server-credentials.json
 gcp-oauth.keys.json
 *.local
+graphify-out/

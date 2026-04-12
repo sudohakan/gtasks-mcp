@@ -26,7 +26,7 @@ Thank you for your interest in contributing! This document outlines the developm
    ```
 
 3. **Set up OAuth credentials** (see [README.md](README.md) for details):
-   - Create `gcp-oauth.keys.json` in the project root
+   - Place `gcp-oauth.keys.json` in your local `gtasks-mcp` config directory, not in the repository
 
 4. **Run in development mode**:
    ```bash

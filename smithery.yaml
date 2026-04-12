@@ -15,4 +15,4 @@ startCommand:
   commandFunction:
     # A function that produces the CLI command to start the MCP on stdio.
     |-
-    config => ({ command: 'node', args: ['dist/index.js'], env: { GCP_OAUTH_KEYS: config.oauthCredentialsPath } })
+    config => ({ command: 'node', args: ['dist/index.js'], env: { GTASKS_MCP_OAUTH_KEYS_PATH: config.oauthCredentialsPath } })
