@@ -1,81 +1,51 @@
 <div align="center">
 
-# 📋 Google Tasks MCP Server
+<img src="https://img.shields.io/badge/MCP-Google%20Tasks-4285F4?style=for-the-badge&logo=google&logoColor=white" />
 
-**Manage Google Tasks directly from Claude and other MCP clients.**
+# Google Tasks MCP Server
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue?style=flat-square)](CHANGELOG.md)
-[![Node.js](https://img.shields.io/badge/node.js-18%2B-brightgreen?style=flat-square)](https://nodejs.org)
+**Full-featured MCP server for Google Tasks with batch operations and task list management.**
+
+12 Tools : Batch Operations : Task List CRUD : Auto Token Refresh
+
+[![npm](https://img.shields.io/npm/v/@modelcontextprotocol/server-gtasks?style=flat-square&color=CB3837)](https://www.npmjs.com/package/@modelcontextprotocol/server-gtasks)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
-[![CI](https://img.shields.io/github/actions/workflow/status/sudohakan/gtasks-mcp/ci.yml?style=flat-square&label=CI)](https://github.com/sudohakan/gtasks-mcp/actions)
+[![Bun](https://img.shields.io/badge/runtime-Bun-f9f1e1?style=flat-square&logo=bun)](https://bun.sh)
 [![Stars](https://img.shields.io/github/stars/sudohakan/gtasks-mcp?style=flat-square)](https://github.com/sudohakan/gtasks-mcp/stargazers)
-
-[Quick Start](#-quick-start) · [Features](#-features) · [Tools](#-available-tools) · [Configuration](#-configuration) · [Contributing](#-contributing)
 
 </div>
 
 ---
 
-## What is this?
+## Why gtasks-mcp?
 
-Seamless MCP integration for Google Tasks — create, search, update, and delete tasks directly from Claude or other MCP clients. OAuth 2.0 authenticated, with full CRUD operations and resource URI support.
+Most Google Tasks integrations offer basic CRUD. This server goes further:
 
-## ✨ Features
+- **Batch operations**: create or update dozens of tasks in a single parallel call, no more one-by-one loops
+- **Full task list management**: create, rename, delete task lists, not just tasks
+- **Externalized config**: credentials live outside the repo (`~/.config/gtasks-mcp/` or `%APPDATA%\gtasks-mcp\`), with automatic legacy migration
+- **Auto token refresh**: OAuth tokens are refreshed and persisted transparently
+- **Resource URIs**: access any task via `gtasks:///<task_id>` for MCP resource reads
 
-| Feature | Details |
-|---------|---------|
-| **Create Tasks** | Add new tasks with title, notes, and due dates |
-| **Search & Filter** | Full-text search across all tasks |
-| **List Management** | View all tasks with cursor-based pagination |
-| **Update Tasks** | Modify title, notes, status, and due dates |
-| **Task Deletion** | Remove individual tasks or clear completed items |
-| **List Operations** | List task lists to get IDs for task operations |
-| **OAuth 2.0** | Secure Google account authentication |
-| **Resource API** | Access tasks via `gtasks:///<task_id>` URIs |
+Originally forked from [zcaceres/google-tasks-mcp](https://github.com/zcaceres/google-tasks-mcp), with significant additions: batch operations, task list CRUD, config externalization, auto token refresh, and due date normalization.
 
-## 🚀 Quick Start
-
-1. **Create a Google Cloud project** and enable the Google Tasks API
-2. **Set up OAuth credentials** (Desktop App type)
-3. **Place credentials** in your local config dir (`%APPDATA%\\gtasks-mcp\\gcp-oauth.keys.json` on Windows, `~/.config/gtasks-mcp/gcp-oauth.keys.json` on Linux/macOS)
-4. **Run authentication**: `npm run start auth`
-5. **Build and configure**: `npm run build`, then add to your MCP config
-
-<details>
-<summary><b>Detailed Setup Instructions</b></summary>
-
-### Step-by-Step Google Cloud Setup
-
-1. [Create a new Google Cloud project](https://console.cloud.google.com/projectcreate)
-2. [Enable the Google Tasks API](https://console.cloud.google.com/workspace-api/products)
-3. [Configure an OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent) ("internal" is fine for testing)
-4. Add scopes: `https://www.googleapis.com/auth/tasks`
-5. [Create an OAuth Client ID](https://console.cloud.google.com/apis/credentials/oauthclient) for application type "Desktop App"
-6. Download the JSON file of your OAuth keys
-7. Rename to `gcp-oauth.keys.json` and place it in your local `gtasks-mcp` config directory
-
-</details>
-
-## 📦 Installation
-
-### Via Smithery (Recommended)
+## Quick Start
 
 ```bash
-npx -y @smithery/cli install @sudohakan/gtasks-mcp --client claude
-```
-
-### Manual Setup
-
-```bash
+# 1. Clone and build
 git clone https://github.com/sudohakan/gtasks-mcp.git
-cd gtasks-mcp
-npm install
-npm run build
+cd gtasks-mcp && bun install && bun run build
+
+# 2. Place your Google OAuth keys
+#    Download from Google Cloud Console (Desktop App type)
+#    Linux/macOS: ~/.config/gtasks-mcp/gcp-oauth.keys.json
+#    Windows:     %APPDATA%\gtasks-mcp\gcp-oauth.keys.json
+
+# 3. Authenticate (one-time)
+bun run start auth
+
+# 4. Add to your MCP client config
 ```
-
-## 🔧 Configuration
-
-Add to your MCP client configuration (e.g., Claude Desktop):
 
 ```json
 {
@@ -88,96 +58,84 @@ Add to your MCP client configuration (e.g., Claude Desktop):
 }
 ```
 
-## 🔐 Authentication
+<details>
+<summary>Google Cloud project setup</summary>
 
-Run the authentication flow once to save your Google credentials:
+1. [Create a Google Cloud project](https://console.cloud.google.com/projectcreate)
+2. [Enable the Google Tasks API](https://console.cloud.google.com/workspace-api/products)
+3. [Configure OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent) (internal is fine for testing)
+4. Add scope: `https://www.googleapis.com/auth/tasks`
+5. [Create OAuth Client ID](https://console.cloud.google.com/apis/credentials/oauthclient) (Desktop App type)
+6. Download JSON, rename to `gcp-oauth.keys.json`, place in config directory
+
+</details>
+
+<details>
+<summary>Install via Smithery</summary>
 
 ```bash
-npm run start auth
+npx -y @smithery/cli install @sudohakan/gtasks-mcp --client claude
 ```
 
-This will:
-1. Open your default browser to Google's OAuth login
-2. Request permission to access Google Tasks
-3. Save credentials to your local config directory, outside the repository
+</details>
 
-Subsequent server runs will use the saved credentials.
+## Tools
 
-### Credential storage
-
-- Windows default: `%APPDATA%\\gtasks-mcp\\`
-- Linux/macOS default: `~/.config/gtasks-mcp/`
-- Override the directory with `GTASKS_MCP_CONFIG_DIR`
-- Override individual files with `GTASKS_MCP_OAUTH_KEYS_PATH` and `GTASKS_MCP_CREDENTIALS_PATH`
-
-If legacy secret files are still present in the repository root, the server will automatically move them into the external config directory on first run.
-
-## 🛠️ Development
-
-| Command | Purpose |
-|---------|---------|
-| `npm run build` | Build for production (TypeScript → JavaScript) |
-| `npm run dev` | Watch mode for development |
-| `npm run start` | Run the server |
-| `npm run start auth` | Run authentication flow |
-| `npm test` | Run test suite |
-
-## 📚 Available Tools (12)
-
-### Task Tools
+### Task Operations (8 tools)
 
 | Tool | Description | Required Params |
 |------|-------------|-----------------|
-| `search` | Search for tasks using a query string | `query` |
+| `search` | Full-text search across title and notes | `query` |
 | `list` | List all tasks across all task lists | -- |
-| `create` | Create a new task | `title` |
-| `update` | Update an existing task | `id`, `uri` |
+| `create` | Create a task with title, notes, due date | `title` |
+| `update` | Update title, notes, status, or due date | `id`, `uri` |
 | `delete` | Delete a task | `id`, `taskListId` |
-| `clear` | Clear completed tasks from a task list | `taskListId` |
-| `batch-create` | Create multiple tasks in parallel | `items[]` (each: `title`) |
-| `batch-update` | Update multiple tasks in parallel | `items[]` (each: `id`) |
+| `clear` | Clear completed tasks from a list | `taskListId` |
+| `batch-create` | Create multiple tasks in parallel | `items[]` |
+| `batch-update` | Update multiple tasks in parallel | `items[]` |
 
-### Task List Tools
+### Task List Operations (4 tools)
 
 | Tool | Description | Required Params |
 |------|-------------|-----------------|
-| `list-tasklists` | List all task lists | -- |
+| `list-tasklists` | List all task lists with IDs | -- |
 | `create-tasklist` | Create a new task list | `title` |
 | `delete-tasklist` | Delete a task list | `taskListId` |
 | `rename-tasklist` | Rename a task list | `taskListId`, `title` |
 
-## 🏗️ Architecture
+## Configuration
 
-This MCP server implements the Model Context Protocol to expose Google Tasks as a resource and tool interface:
+Credentials are stored outside the repository by default.
 
-- **Resources**: Tasks accessible via `gtasks:///<task_id>` URIs
-- **Tools**: CRUD operations, search, and list management
-- **Auth**: OAuth 2.0 with local credential storage
-- **Transport**: HTTP-based MCP protocol
+| Platform | Default Path |
+|----------|-------------|
+| Linux/macOS | `~/.config/gtasks-mcp/` |
+| Windows | `%APPDATA%\gtasks-mcp\` |
 
-## 📁 Project Structure
+### Environment Variables
 
-```
-gtasks-mcp/
-├── src/
-│   ├── index.ts           # Main server implementation
-│   ├── config.ts          # Configuration and credential paths
-│   └── Tasks.ts           # Task action helpers (batch ops)
-├── dist/                  # Compiled output
-├── package.json           # Dependencies and scripts
-├── tsconfig.json          # TypeScript configuration
-├── README.md              # This file
-├── LICENSE                # MIT License
-├── CHANGELOG.md           # Version history
-├── SECURITY.md            # Security policy
-├── CONTRIBUTING.md        # Development guidelines
-└── CODE_OF_CONDUCT.md     # Community standards
-```
+| Variable | Purpose |
+|----------|---------|
+| `GTASKS_MCP_CONFIG_DIR` | Override config directory |
+| `GTASKS_MCP_OAUTH_KEYS_PATH` | Override OAuth keys file path |
+| `GTASKS_MCP_CREDENTIALS_PATH` | Override credentials file path |
 
-## 🤝 Contributing
+Legacy files in the repo root are automatically migrated to the config directory on first run.
 
-Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, code standards, and the pull request process.
+### Development
 
-## 📄 License
+| Command | Purpose |
+|---------|---------|
+| `bun run build` | Build for production |
+| `bun run dev` | Watch mode |
+| `bun run start` | Run the server |
+| `bun run start auth` | Run OAuth flow |
+| `bun test` | Run tests |
 
-[MIT](LICENSE) — Copyright © 2026 Hakan Topçu
+## Contributing
+
+Contributions welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## License
+
+[MIT](LICENSE)
