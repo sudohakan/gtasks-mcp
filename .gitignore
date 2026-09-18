@@ -6,3 +6,7 @@ dist/
 gcp-oauth.keys.json
 *.local
 graphify-out/
+.env.*
+*.pem
+*.key
+credentials*
