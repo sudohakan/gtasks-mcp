@@ -6,9 +6,8 @@
 
 **Full-featured MCP server for Google Tasks with batch operations and task list management.**
 
-12 Tools : Batch Operations : Task List CRUD : Auto Token Refresh
+12 tools · batch operations · task list CRUD · automatic token refresh
 
-[![npm](https://img.shields.io/npm/v/@modelcontextprotocol/server-gtasks?style=flat-square&color=CB3837)](https://www.npmjs.com/package/@modelcontextprotocol/server-gtasks)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 [![Bun](https://img.shields.io/badge/runtime-Bun-f9f1e1?style=flat-square&logo=bun)](https://bun.sh)
 [![Stars](https://img.shields.io/github/stars/sudohakan/gtasks-mcp?style=flat-square)](https://github.com/sudohakan/gtasks-mcp/stargazers)
@@ -19,7 +18,7 @@
 
 ## What it does
 
-Most Google Tasks integrations offer basic CRUD. This server goes further:
+Google Tasks over MCP, with the operations the base API makes tedious built in:
 
 - **Batch operations**: create or update dozens of tasks in a single parallel call, no more one-by-one loops
 - **Full task list management**: create, rename, delete task lists, not just tasks
@@ -122,7 +121,7 @@ Credentials are stored outside the repository by default.
 
 Legacy files in the repo root are automatically migrated to the config directory on first run.
 
-### Development
+## Development
 
 | Command | Purpose |
 |---------|---------|
@@ -131,8 +130,6 @@ Legacy files in the repo root are automatically migrated to the config directory
 | `bun run start` | Run the server |
 | `bun run start auth` | Run OAuth flow |
 | `bun test` | Run tests |
-
-## Development
 
 Contributions welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
