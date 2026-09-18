@@ -17,7 +17,7 @@
 
 ---
 
-## Why gtasks-mcp?
+## What it does
 
 Most Google Tasks integrations offer basic CRUD. This server goes further:
 
@@ -29,7 +29,7 @@ Most Google Tasks integrations offer basic CRUD. This server goes further:
 
 Originally forked from [zcaceres/google-tasks-mcp](https://github.com/zcaceres/google-tasks-mcp), with significant additions: batch operations, task list CRUD, config externalization, auto token refresh, and due date normalization.
 
-## Quick Start
+## Install
 
 ```bash
 # 1. Clone and build
@@ -79,7 +79,7 @@ npx -y @smithery/cli install @sudohakan/gtasks-mcp --client claude
 
 </details>
 
-## Tools
+## Usage
 
 ### Task Operations (8 tools)
 
@@ -132,7 +132,7 @@ Legacy files in the repo root are automatically migrated to the config directory
 | `bun run start auth` | Run OAuth flow |
 | `bun test` | Run tests |
 
-## Contributing
+## Development
 
 Contributions welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
