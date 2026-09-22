@@ -31,6 +31,7 @@
     "googleapis": "^144.0.0"
   },
   "devDependencies": {
-    "bun-types": "^1.2.5"
+    "bun-types": "^1.2.5",
+    "typescript": "^7.0.2"
   }
 }

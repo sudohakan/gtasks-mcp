@@ -95,10 +95,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "list",
-        description: "List all tasks in Google Tasks",
+        description: "List tasks in Google Tasks (all lists, or one list when taskListId is given)",
         inputSchema: {
           type: "object",
           properties: {
+            taskListId: {
+              type: "string",
+              description: "Only list tasks from this task list",
+            },
             cursor: {
               type: "string",
               description: "Cursor for pagination",
@@ -127,6 +131,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             due: {
               type: "string",
               description: "Due date (YYYY-MM-DD or ISO 8601 format, e.g. 2025-03-19)",
+            },
+            parent: {
+              type: "string",
+              description: "Parent task ID — creates this task as a subtask (parent must be in the same list)",
             },
           },
           required: ["title"],
@@ -234,12 +242,28 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
                   title: { type: "string", description: "Task title" },
                   notes: { type: "string", description: "Task notes" },
                   due: { type: "string", description: "Due date (YYYY-MM-DD)" },
+                  parent: { type: "string", description: "Parent task ID (subtask; same list). Subtasks keep the given order." },
                 },
                 required: ["title"],
               },
             },
           },
           required: ["items"],
+        },
+      },
+      {
+        name: "move",
+        description: "Move a task: under a parent (make subtask), back to top level, reorder, or to another task list",
+        inputSchema: {
+          type: "object",
+          properties: {
+            taskListId: { type: "string", description: "Current task list ID" },
+            id: { type: "string", description: "Task ID to move" },
+            parent: { type: "string", description: "New parent task ID; omit to move to top level" },
+            previous: { type: "string", description: "Sibling task ID to place this task after; omit for first position" },
+            destinationTaskListId: { type: "string", description: "Target task list ID when moving between lists (subtasks move with their parent)" },
+          },
+          required: ["id"],
         },
       },
       {
@@ -341,6 +365,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   if (request.params.name === "create") {
     const taskResult = await TaskActions.create(request, tasks);
     return taskResult;
+  }
+  if (request.params.name === "move") {
+    return await TaskActions.move(request, tasks);
   }
   if (request.params.name === "batch-create") {
     const taskResult = await TaskActions.batchCreate(request, tasks);
